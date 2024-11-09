@@ -1,6 +1,7 @@
 const User = require('../models/user.model');
 const bcrypt = require('bcrypt');
 const { validationResult } = require('express-validator');
+const jwt = require('jsonwebtoken');
 
 exports.registerUser = async (req, res) => {
     const errors = validationResult(req);
@@ -26,23 +27,42 @@ exports.registerUser = async (req, res) => {
 };
 
 exports.loginUser = async (req, res) => {
-    try {
-      const { email, password } = req.body;
-      const user = await User.findOne({ email });
-      if (!user) return res.status(400).json({ message: 'Invalid credentials' });
-  
-      const isMatch = await bcrypt.compare(password, user.password);
-      if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
-  
-      const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: '1h' });
-      res.json({ message: 'User logged in successfully', token });
-    } catch (error) {
-      res.status(500).json({ message: 'Error logging in user', error });
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Please provide both email and password' });
     }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
+
+    if (!process.env.JWT_SECRET) {
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    res.status(200).json({ message: 'User logged in successfully', token });
+  } catch (error) {
+    res.status(500).json({ message: 'Error logging in user', error });
+  }
 };
+
 
 exports.getUserProfile = async (req, res) => {
     try {
+      if (!req.user.id){
+        return res.status(300).json({
+          message:"id not provided"
+        })
+      } 
       const user = await User.findById(req.userId).select('-password').exec();
       res.status(200).json(user);
     } catch (error) {
