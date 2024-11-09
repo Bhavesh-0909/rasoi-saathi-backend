@@ -39,4 +39,13 @@ exports.loginFoodBank = async (req, res) => {
     } catch (error) {
       res.status(500).json({ message: 'Error logging in food bank', error });
     }
-  };
+};
+
+exports.getFoodBankProfile = async (req, res) => {
+    try {
+      const foodBank = await FoodBank.findById(req.foodBankId).select('-password').exec();
+      res.status(200).json(foodBank);
+    } catch (error) {
+      res.status(500).json({ message: 'Error fetching food bank profile', error });
+    }
+};

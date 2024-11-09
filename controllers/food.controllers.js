@@ -1,5 +1,5 @@
-const Product = require('../models/Product');
-const User = require('../models/User');
+const Product = require('../models/product.model');
+const User = require('../models/user.model');
 const transporter = require('../config/nodemailer');
 const cron = require('node-cron')
 
@@ -78,7 +78,8 @@ cron.schedule('0 0 * * *', () => {
 
 exports.deleteFoodItem = async (req, res) => {
     try {
-        const { userId, productId } = req.body;
+        const { userId} = req.body;
+        const productId = req.params.id;
 
         // Remove the product from the inventory
         await Product.findByIdAndDelete(productId);
