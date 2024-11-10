@@ -5,20 +5,21 @@ const cron = require('node-cron')
 
 exports.addFoodItem = async (req, res) => {
     try {
-      const { userId, productName, productAmount, productExpiry } = req.body;
+      const { userId, productName, productAmount, productQuantity, buyingDate,  productExpiry } = req.body;
   
       // Add the product to the inventory
-      const product = new Product({
+      const product = await Product.create({
         productName,
         productAmount,
-        productExpiry
+        productExpiry,
+        productQuantity,
+        buyingDate,
       });
-  
-      await product.save();
-  
-      // Link product to user
-      await User.findByIdAndUpdate(userId, { $push: { foodInventory: product._id } });
-  
+      
+      if(product){
+        await User.findByIdAndUpdate(userId, { $push: { foodInventory: product._id } });
+      }
+      
       res.status(201).json({ message: 'Food item added successfully', product });
     } catch (error) {
       res.status(500).json({ message: 'Error adding food item', error });

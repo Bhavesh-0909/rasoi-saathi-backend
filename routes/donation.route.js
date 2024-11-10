@@ -7,7 +7,7 @@ const donationController = require('../controllers/donation.controllers')
 
 // Define routes
 router.post('/add', donationController.createDonation);
-router.get('/all', donationController.listDonations);
+router.get('/all/:userId', donationController.listDonations);
 router.post('/request', donationController.requestPickup);
 router.post('/approve', donationController.confirmDonationReceipt);
 

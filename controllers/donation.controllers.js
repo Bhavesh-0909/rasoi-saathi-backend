@@ -3,6 +3,7 @@ const User = require('../models/user.model');
 const FoodBank = require('../models/foodBank.model');
 const { validationResult } = require('express-validator');
 const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
 
 // Create a new donation listing
 exports.createDonation = async (req, res) => {
@@ -10,19 +11,25 @@ exports.createDonation = async (req, res) => {
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
   try {
-    const { amountOfFood, userId } = req.body;
+    const { amount, foodtype, people, userId } = req.body;
 
+    if (!amount || !foodtype || !people || !userId) {
+      return res.status(400).json({ message: 'Please provide all fields' });
+    }
     // Ensure the user is authenticated
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     const donation = new Donation({
-      amountOfFood,
-      user: user._id,
+      amountOfFood: amount,
+      foodType: foodtype,
+      noOfPeopleFed: people,
+      donatedBy: user._id
     });
-
+   
     await donation.save();
     user.donations.push(donation._id);
+    
     await user.save();
 
     res.status(201).json({ message: 'Donation created successfully', donation });
@@ -34,7 +41,8 @@ exports.createDonation = async (req, res) => {
 // List donations available for food banks
 exports.listDonations = async (req, res) => {
   try {
-    const donations = await Donation.find().populate('user', 'name location contact').exec();
+    const userId = req.params.userId;
+    const donations = await Donation.find({ donatedBy: userId });
     res.status(200).json(donations);
   } catch (error) {
     res.status(500).json({ message: 'Error listing donations', error });

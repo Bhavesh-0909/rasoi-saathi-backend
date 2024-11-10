@@ -1,8 +1,16 @@
 const mongoose = require('mongoose');
 
 const donationSchema = new mongoose.Schema({
-    amountOfFood: {
+    foodType: {
+      type: String,
+      required: true
+    },
+    noOfPeopleFed: {
       type: Number,
+      required: true
+    },
+    amountOfFood: {
+      type: String,
       required: true
     },
     donatedBy: {
@@ -13,11 +21,14 @@ const donationSchema = new mongoose.Schema({
     receivedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'FoodBank',
-      required: true
     },
     donatedAt: {
       type: Date,
       default: Date.now
+    },
+    status: {
+      type: String,
+      default: 'pending'
     }
   }, { timestamps: true });
   
